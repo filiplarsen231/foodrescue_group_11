@@ -11,6 +11,8 @@ export default function Home() {
     expiry_date: ''
   })
 
+  const [user, setUser] = useState(null)
+
   useEffect(() => {
     const fetchListings = async () => {
       // OBS: Se till att 'Listings' är stavat exakt som i din databas (oftast 'listings')
@@ -24,7 +26,21 @@ export default function Home() {
     }
     
     fetchListings()
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+    })
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null)
+    })
+    return () => authListener.subscription.unsubscribe()
   }, [])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    window.location.reload() // Enkel refresh för att rensa states
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
