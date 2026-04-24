@@ -33,10 +33,13 @@ async function Calc_Distance_Multi(origin, destinations) {
     const response = await fetch(URL)
     const data = await response.json()
 
-    
+    const dataList = []
+    for(let i = 0; i < data.rows[0].elements.length; i++){
+        dataList.push(data.rows[0].elements[i].distance.value)
+    }
     
 
-    return data
+    return dataList
 }
 
 
@@ -47,17 +50,19 @@ async function Calc_Distance_Multi(origin, destinations) {
 
 
 
-const test_origin = "Lärdomsgatan 9, Göteborg"
+/*const test_origin = "Lärdomsgatan 9, Göteborg"
 const test_destination = "Vasagatan 33, Göteborg"
 const tesst_dest2 = "Tubogatan 13, Norrköping"
 const distarray = [test_destination, tesst_dest2]
 
 
-//const dist = await Calc_Distance(test_origin, test_destination)
+const dist1 = await Calc_Distance(test_origin, test_destination)
 
-const dist = await Calc_Distance_Multi(test_origin, distarray)
+const dist2 = await Calc_Distance_Multi(test_origin, distarray)
 
-console.log("testing: ", dist)
+console.log("testing singel: ", dist1)
+
+console.log("testing multi: ", dist2)*/
 
 //https://console.cloud.google.com/marketplace/product/google/distance-matrix-backend.googleapis.com?q=search&referrer=search&project=project-03e05d93-b3c7-48de-bc7
 //https://developers.google.com/maps/documentation/distance-matrix/start#maps_http_distancematrix_start-txt
