@@ -3,43 +3,44 @@
 //Använd await innnan om du kallar denna funktion
 async function Calc_Distance(origin, destination){
     
-    
     const API_KEY = "AIzaSyCjNsLzUbZz1D522m-rb9DnCSTkcKLuV_M";
-
     const URL = `https://maps.googleapis.com/maps/api/distancematrix/json?destinations=${destination}&origins=${origin}&key=${API_KEY}`
-
-    const response = await fetch(URL)
-    const data = await response.json()
-
     
-    //console.log("Google data: ", data)
-    
-    const distance = data.rows[0].elements[0].distance.value
-
-    //console.log("Distance: ", distance)
-
-    return distance
+    try{
+        const response = await fetch(URL)
+        const data = await response.json()
+        if(data.status == "OK"){
+            const distance = data.rows[0].elements[0].distance.value
+            return distance
+        }
+    }catch{
+        console.log("Error")
+    }
+   
 }
 
 
 async function Calc_Distance_Multi(origin, destinations) {
     
     const API_KEY = "AIzaSyCjNsLzUbZz1D522m-rb9DnCSTkcKLuV_M";
-
     const destinationsApiFormat = destinations.join("|")
-
     const URL = `https://maps.googleapis.com/maps/api/distancematrix/json?destinations=${destinationsApiFormat}&origins=${origin}&key=${API_KEY}`
 
-    const response = await fetch(URL)
-    const data = await response.json()
-
-    const dataList = []
-    for(let i = 0; i < data.rows[0].elements.length; i++){
-        dataList.push(data.rows[0].elements[i].distance.value)
+    try{
+        const response = await fetch(URL)
+        const data = await response.json()
+        
+        if(data.status == "OK"){
+            const dataList = []
+            for(let i = 0; i < data.rows[0].elements.length; i++){
+                dataList.push(data.rows[0].elements[i].distance.value)
+            }
+            return dataList
+        }
+    }catch{
+        console.log("Error")
     }
-    
 
-    return dataList
 }
 
 
