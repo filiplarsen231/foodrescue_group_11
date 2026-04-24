@@ -58,14 +58,25 @@ export default function Home() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
+    if (!user) {
+      alert("You must be logged in to create a listing!")
+      return
+    }
+    
+    // Include user_id in the listing data
+    const listingData = {
+      ...formData,
+      user_id: user.id
+    }
+    
     const { data, error } = await supabase
       .from('Listings')
-      .insert([formData])
+      .insert([listingData])
       .select()
     
     if (error) {
       console.log("Error adding listing:", error.message)
-      alert("Failed to add listing!")
+      alert("Failed to add listing! Error: " + error.message) // Show actual error
     } else {
       console.log("Successfully added:", data)
       setListings([...listings, ...data]) // Add new listing to the list
@@ -147,7 +158,7 @@ export default function Home() {
                   required
                   rows="3"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Describe the food item and amount..."
+                  placeholder="Describe the food item, amount and condition..."
                 />
               </div>
 
