@@ -8,7 +8,7 @@ export default function Account() {
   const [saving, setSaving] = useState(false)
   const [user, setUser] = useState(null)
   const [fullName, setFullName] = useState('')
-  const [location, setLocation] = useState('')
+  const [address, setAddress] = useState('')
   const [phone, setPhone] = useState('')
 
   useEffect(() => {
@@ -22,13 +22,13 @@ export default function Account() {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('full_name, location, phone')
+        .select('full_name, address, phone')
         .eq('id', user.id)
         .single()
 
       if (data) {
         setFullName(data.full_name ?? '')
-        setLocation(data.location ?? '')
+        setAddress(data.address ?? '')
         setPhone(data.phone ?? '')
       } else if (error && error.code !== 'PGRST116') {
         // PGRST116 = no row found, expected for new users before first save
@@ -46,12 +46,12 @@ export default function Account() {
       id: user.id,
       email: user.email,
       full_name: fullName,
-      location,
+      address,
       phone,
       updated_at: new Date().toISOString(),
     })
     if (error) alert(error.message)
-    else alert('Profil sparad!')
+    else alert('Profile saved!')
     setSaving(false)
   }
 
@@ -60,16 +60,16 @@ export default function Account() {
     navigate('/login')
   }
 
-  if (loading) return <p className="p-8">Laddar...</p>
+  if (loading) return <p className="p-8">Loading...</p>
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
       <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl">
-        <h1 className="text-2xl font-bold text-center mb-6 text-green-700">Mitt konto</h1>
+        <h1 className="text-2xl font-bold text-center mb-6 text-green-700">My Account</h1>
 
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">E-post</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
             <input
               type="email"
               value={user.email}
@@ -78,7 +78,7 @@ export default function Account() {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Namn</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Name</label>
             <input
               type="text"
               value={fullName}
@@ -87,16 +87,16 @@ export default function Account() {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Plats</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Address</label>
             <input
               type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
               className="w-full p-3 border rounded-lg text-black"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Telefon</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
             <input
               type="tel"
               value={phone}
@@ -110,14 +110,14 @@ export default function Account() {
             disabled={saving}
             className="w-full bg-green-600 text-white p-3 rounded-lg font-bold hover:bg-green-700 disabled:bg-gray-400"
           >
-            {saving ? 'Sparar...' : 'Spara'}
+            {saving ? 'Saving...' : 'Save'}
           </button>
           <button
             type="button"
             onClick={handleLogout}
             className="w-full border border-red-500 text-red-500 p-3 rounded-lg font-bold hover:bg-red-50"
           >
-            Logga ut
+            Log out
           </button>
         </form>
       </div>

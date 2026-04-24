@@ -8,27 +8,40 @@ export default function Home() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    expiry_date: ''
+    expiry_date: '',
+    address: ''
   })
 
   const [user, setUser] = useState(null)
+  const [profileAddress, setProfileAddress] = useState('')
 
   useEffect(() => {
     const fetchListings = async () => {
       // OBS: Se till att 'Listings' är stavat exakt som i din databas (oftast 'listings')
       const { data, error } = await supabase.from('Listings').select('*')
-      
+
       if (error) {
         console.log("Fel vid hämtning:", error.message)
       } else {
         setListings(data) // 3. Spara datan i vårt state
       }
     }
-    
+
     fetchListings()
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
       setUser(user)
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('address')
+          .eq('id', user.id)
+          .single()
+        if (profile?.address) {
+          setProfileAddress(profile.address)
+          setFormData(prev => ({ ...prev, address: profile.address }))
+        }
+      }
     })
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
@@ -57,7 +70,7 @@ export default function Home() {
       console.log("Successfully added:", data)
       setListings([...listings, ...data]) // Add new listing to the list
       setShowModal(false) 
-      setFormData({ title: '', description: '', expiry_date: '' }) 
+      setFormData({ title: '', description: '', expiry_date: '', address: profileAddress })
       alert("Listing added successfully!")
     }
   }
@@ -135,6 +148,20 @@ export default function Home() {
                   rows="3"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Describe the food item and amount..."
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-gray-700 font-semibold mb-2">
+                  Address
+                </label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., Storgatan 1, Stockholm"
                 />
               </div>
 
