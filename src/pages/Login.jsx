@@ -22,7 +22,7 @@ export default function Login() {
         setLoading(true)
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) alert(error.message)
-        else navigate('/') // Skicka hem användaren när det lyckas
+        else navigate('/account') // Skicka till kontosidan när det lyckas
         setLoading(false)
     }
 
