@@ -1,6 +1,11 @@
-import { useEffect, useState } from 'react'
+import GooglePlaces from "react-google-autocomplete";
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+
+const Autocomplete = GooglePlaces.default || GooglePlaces;
+
+const API_KEY = "AIzaSyCjNsLzUbZz1D522m-rb9DnCSTkcKLuV_M";
 
 export default function Account() {
   const navigate = useNavigate()
@@ -10,6 +15,7 @@ export default function Account() {
   const [fullName, setFullName] = useState('')
   const [address, setAddress] = useState('')
   const [phone, setPhone] = useState('')
+
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -88,11 +94,46 @@ export default function Account() {
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Address</label>
-            <input
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
+            <Autocomplete
+              apiKey={API_KEY}
+              onPlaceSelected={(place) => {
+          // 1. Spara den snygga adressen som text
+                let streetName = "";
+                let streetNumber = "";
+                let city = "";
+
+                if (place.address_components) {
+                  for (const component of place.address_components) {
+                    // Hitta gatunamnet
+                    if (component.types.includes("route")) {
+                      streetName = component.long_name; 
+                    }
+                    // Hitta husnumret
+                    if (component.types.includes("street_number")) {
+                      streetNumber = component.long_name; 
+                    }
+                    // Hitta staden/orten
+                    if (component.types.includes("postal_town") || component.types.includes("locality")) {
+                      city = component.long_name; 
+                    }
+                  }
+                }
+
+                if (!streetNumber) {
+                  alert("Vänligen skriv med ditt husnummer i adressfältet!");
+                  return; // Avbryt så att fel adress inte sparas
+                }
+                
+                const perfectAddress = `${streetName} ${streetNumber}, ${city}, Sverige`;
+
+                setAddress(perfectAddress);
+              }}
+              options={{
+                types: ["address"],
+                componentRestrictions: { country: "se" }, // Begränsa till Sverige
+              }}
               className="w-full p-3 border rounded-lg text-black"
+              placeholder="Börja skriva din adress..."
             />
           </div>
           <div>
