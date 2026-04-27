@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase' // Importera klienten du nyss skapade
+import { supabase } from '../lib/supabase'
 import { useEffect, useState } from 'react'
 import { Calc_Distance_Multi } from '../components/Distance_calc'
 
@@ -19,7 +19,6 @@ export default function Home() {
 
   useEffect(() => {
     const initPage = async () => {
-      // 1. Hämta alla annonser först
       const { data: fetchedListings, error: listError } = await supabase
         .from('Listings')
         .select('*');
@@ -29,7 +28,7 @@ export default function Home() {
         return;
       }
 
-      // Sätt initiala listings (utan avstånd än)
+      
       setListings(fetchedListings);
 
       // 2. Hämta användaren och dess adress

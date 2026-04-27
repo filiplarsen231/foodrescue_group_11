@@ -1,11 +1,6 @@
-import GooglePlaces from "react-google-autocomplete";
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-
-const Autocomplete = GooglePlaces.default || GooglePlaces;
-
-const API_KEY = "AIzaSyCjNsLzUbZz1D522m-rb9DnCSTkcKLuV_M";
 
 export default function Account() {
   const navigate = useNavigate()
@@ -16,6 +11,7 @@ export default function Account() {
   const [address, setAddress] = useState('')
   const [phone, setPhone] = useState('')
 
+  const addressInputRef = useRef(null)
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -37,13 +33,71 @@ export default function Account() {
         setAddress(data.address ?? '')
         setPhone(data.phone ?? '')
       } else if (error && error.code !== 'PGRST116') {
-        // PGRST116 = no row found, expected for new users before first save
+        
         alert(error.message)
       }
       setLoading(false)
     }
     loadProfile()
   }, [navigate])
+
+  useEffect(() => {
+    let autocomplete = null;
+
+    const initGooglePlaces = () => {
+     
+      if (addressInputRef.current && window.google && window.google.maps && window.google.maps.places) {
+        
+        
+        autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+          types: ["address"],
+          componentRestrictions: { country: "se" },
+        })
+
+        // Lyssna på när användaren väljer en adress i dropdownen
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace()
+          
+          let streetName = "";
+          let streetNumber = "";
+          let city = "";
+
+          // Plocka ut gata, nummer och stad
+          if (place.address_components) {
+            for (const component of place.address_components) {
+              if (component.types.includes("route")) streetName = component.long_name;
+              if (component.types.includes("street_number")) streetNumber = component.long_name;
+              if (component.types.includes("postal_town") || component.types.includes("locality")) city = component.long_name;
+            }
+          }
+
+          if (!streetNumber) {
+            alert("Vänligen skriv med ditt husnummer i adressfältet!");
+            return;
+          }
+
+          const perfectAddress = `${streetName} ${streetNumber}, ${city}, Sverige`;
+          setAddress(perfectAddress);
+          
+      
+          if (addressInputRef.current) {
+            addressInputRef.current.value = perfectAddress;
+          }
+        })
+      }
+    }
+
+    
+    const checkGoogleInterval = setInterval(() => {
+      if (window.google) {
+        clearInterval(checkGoogleInterval)
+        initGooglePlaces()
+      }
+    }, 500)
+
+    // Städa upp om man byter sida
+    return () => clearInterval(checkGoogleInterval)
+  }, []) // Körs bara en gång när sidan laddas
 
   const handleSave = async (e) => {
     e.preventDefault()
@@ -94,44 +148,11 @@ export default function Account() {
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Address</label>
-            <Autocomplete
-              apiKey={API_KEY}
-              onPlaceSelected={(place) => {
-          // 1. Spara den snygga adressen som text
-                let streetName = "";
-                let streetNumber = "";
-                let city = "";
-
-                if (place.address_components) {
-                  for (const component of place.address_components) {
-                    // Hitta gatunamnet
-                    if (component.types.includes("route")) {
-                      streetName = component.long_name; 
-                    }
-                    // Hitta husnumret
-                    if (component.types.includes("street_number")) {
-                      streetNumber = component.long_name; 
-                    }
-                    // Hitta staden/orten
-                    if (component.types.includes("postal_town") || component.types.includes("locality")) {
-                      city = component.long_name; 
-                    }
-                  }
-                }
-
-                if (!streetNumber) {
-                  alert("Vänligen skriv med ditt husnummer i adressfältet!");
-                  return; // Avbryt så att fel adress inte sparas
-                }
-                
-                const perfectAddress = `${streetName} ${streetNumber}, ${city}, Sverige`;
-
-                setAddress(perfectAddress);
-              }}
-              options={{
-                types: ["address"],
-                componentRestrictions: { country: "se" }, // Begränsa till Sverige
-              }}
+            <input
+              ref={addressInputRef}
+              type="text"
+              defaultValue={address} // Visar adressen som finns i databasen
+              onChange={(e) => setAddress(e.target.value)} 
               className="w-full p-3 border rounded-lg text-black"
               placeholder="Börja skriva din adress..."
             />
