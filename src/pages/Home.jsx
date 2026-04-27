@@ -31,7 +31,6 @@ export default function Home() {
       
       setListings(fetchedListings);
 
-      // 2. Hämta användaren och dess adress
       const { data: { user: authUser } } = await supabase.auth.getUser();
       
       if (authUser) {
@@ -47,11 +46,9 @@ export default function Home() {
           setProfileAddress(userAd);
           setFormData(prev => ({ ...prev, address: userAd }));
 
-          // 3. Om vi har både adress och annonser -> Beräkna avstånd
           if (fetchedListings.length > 0) {
             setLoadingDistance(true);
 
-            // Skapa en array med bara adress-strängar
             const destinations = fetchedListings.map(l => l.address || '');
             
             const distances = await Calc_Distance_Multi(userAd, destinations);
