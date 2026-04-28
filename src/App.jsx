@@ -4,6 +4,7 @@ import About from './pages/About'
 import Listings from './pages/Listings'
 import Login from './pages/Login'
 import Account from './pages/Account'
+import ChatPage from './pages/ChatPage'
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/listings" element={<Listings />} />
         <Route path="/login" element={<Login />} />
         <Route path="/account" element={<Account />} />
+        <Route path="/messages/:id" element={<ChatPage />} />
       </Routes>
     </BrowserRouter>
   )
