@@ -1,9 +1,11 @@
-import { supabase } from '../lib/supabase' // Importera klienten du nyss skapade
+import { supabase } from '../lib/supabase'
 import { useEffect, useState } from 'react'
+import { Calc_Distance_Multi } from '../components/Distance_calc'
 
 export default function Home() {
 
   const [listings, setListings] = useState([])
+  const [laodingDistance, setLoadingDistance] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
@@ -16,39 +18,65 @@ export default function Home() {
   const [profileAddress, setProfileAddress] = useState('')
 
   useEffect(() => {
-    const fetchListings = async () => {
-      // OBS: Se till att 'Listings' är stavat exakt som i din databas (oftast 'listings')
-      const { data, error } = await supabase.from('Listings').select('*')
+    const initPage = async () => {
+      const { data: fetchedListings, error: listError } = await supabase
+        .from('Listings')
+        .select('*');
 
-      if (error) {
-        console.log("Fel vid hämtning:", error.message)
-      } else {
-        setListings(data) // 3. Spara datan i vårt state
+      if (listError) {
+        console.log("Fel vid hämtning:", listError.message);
+        return;
       }
-    }
 
-    fetchListings()
+      
+      setListings(fetchedListings);
 
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      setUser(user)
-      if (user) {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
+      if (authUser) {
+        setUser(authUser);
         const { data: profile } = await supabase
           .from('profiles')
           .select('address')
-          .eq('id', user.id)
-          .single()
+          .eq('id', authUser.id)
+          .single();
+
         if (profile?.address) {
-          setProfileAddress(profile.address)
-          setFormData(prev => ({ ...prev, address: profile.address }))
+          const userAd = profile.address;
+          setProfileAddress(userAd);
+          setFormData(prev => ({ ...prev, address: userAd }));
+
+          if (fetchedListings.length > 0) {
+            setLoadingDistance(true);
+
+            const destinations = fetchedListings.map(l => l.address || '');
+            
+            const distances = await Calc_Distance_Multi(userAd, destinations);
+            console.log("distnace test", distances)
+
+            if (distances) {
+              const listWithDist = fetchedListings.map((item, index) => ({
+                ...item,
+                distanceText: distances[index] 
+                  ? (distances[index] / 1000).toFixed(1) + " km" 
+                  : "Okänt avstånd"
+              }));
+              setListings(listWithDist);
+            }
+            setLoadingDistance(false);
+          }
         }
       }
-    })
+    };
+
+    initPage();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null)
-    })
-    return () => authListener.subscription.unsubscribe()
-  }, [])
+      setUser(session?.user ?? null);
+    });
+    
+    return () => authListener.subscription.unsubscribe();
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -111,6 +139,11 @@ export default function Home() {
           listings.map((item) => (
             <div key={item.id} className="p-4 border rounded-xl shadow-sm bg-white hover:shadow-md transition">
               <h2 className="text-xl font-semibold">{item.title}</h2>
+              {item.distanceText &&(
+                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded">
+                  {item.distanceText}
+                </span>)}
+
               <p className="text-gray-500">{item.description}</p>
               {/* Om du har ett datumfält kan du visa det också: */}
               {item.expiry_date && (

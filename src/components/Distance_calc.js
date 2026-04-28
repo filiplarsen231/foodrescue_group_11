@@ -20,27 +20,26 @@ async function Calc_Distance(origin, destination){
 }
 
 
-async function Calc_Distance_Multi(origin, destinations) {
+export function Calc_Distance_Multi(origin, destinations) {
+  return new Promise((resolve, reject) => {
+    const service = new window.google.maps.DistanceMatrixService();
     
-    const API_KEY = "AIzaSyCjNsLzUbZz1D522m-rb9DnCSTkcKLuV_M";
-    const destinationsApiFormat = destinations.join("|")
-    const URL = `https://maps.googleapis.com/maps/api/distancematrix/json?destinations=${destinationsApiFormat}&origins=${origin}&key=${API_KEY}`
-
-    try{
-        const response = await fetch(URL)
-        const data = await response.json()
-        
-        if(data.status == "OK"){
-            const dataList = []
-            for(let i = 0; i < data.rows[0].elements.length; i++){
-                dataList.push(data.rows[0].elements[i].distance.value)
-            }
-            return dataList
+    service.getDistanceMatrix(
+      {
+        origins: [origin],
+        destinations: destinations,
+        travelMode: 'DRIVING',
+      },
+      (response, status) => {
+        if (status === 'OK') {
+          const distances = response.rows[0].elements.map(el => el.distance.value);
+          resolve(distances);
+        } else {
+          reject(status);
         }
-    }catch{
-        console.log("Error")
-    }
-
+      }
+    );
+  });
 }
 
 
