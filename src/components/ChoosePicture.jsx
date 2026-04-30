@@ -2,49 +2,73 @@ import { useState } from "react";
 import { supabase } from "../lib/supabase";
 
 export default function ChoosePicture({ onSelect }) {
-  const [images, setImages] = useState([]);
-  const [open, setOpen] = useState(false);
+  const [preview, setPreview] = useState(null); // sparar en preview så man ser bilden direkt
+  const [uploading, setUploading] = useState(false); // håller koll på om bilden laddas upp
 
-  async function openGallery() {
-    const { data } = await supabase.storage.from("Gallery").list();
+  async function handleFileChange(e) {
+    const file = e.target.files[0];
 
-    const urls = data.map((file) => {
-      const { data } = supabase.storage
-        .from("Gallery")
-        .getPublicUrl(file.name);
+    if (!file) return; // om ingen fil valdes, gör inget
 
-      return data.publicUrl;
-    });
+    // visar en preview direkt innan upload (snabb feedback till user)
+    const previewUrl = URL.createObjectURL(file);
+    setPreview(previewUrl);
 
-    setImages(urls);
-    setOpen(true);
+    // gör ett unikt filnamn så inget skrivs över
+    const fileName = `${Date.now()}-${file.name}`;
+
+    setUploading(true); // sätter loading state
+
+    const { data, error } = await supabase.storage
+      .from("Gallery") // bucket i supabase
+      .upload(fileName, file);
+
+    console.log("UPLOAD RESULT:", data, error);
+
+    if (error) {
+      alert("UPLOAD FAILED: " + error.message);
+      console.error("FULL ERROR:", error);
+      setUploading(false);
+      return;
+    }
+
+    console.log("UPLOAD SUCCESS:", data);
+
+    // hämtar public URL så bilden kan visas senare
+    const { data: urlData } = supabase.storage
+      .from("Gallery")
+      .getPublicUrl(fileName);
+
+    console.log("PUBLIC URL:", urlData.publicUrl);
+
+    // skickar tillbaka bilden till parent (Home.jsx)
+    onSelect(urlData.publicUrl);
+
+    setUploading(false); // klart med upload
   }
 
   return (
     <div>
-      {/* ChoosePicture knapp */}
-      <button
-        type="button"
-        onClick={openGallery}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-      >
-        Choose Picture
-      </button>
+      {/* knapp som triggar filval */}
+      <label className="bg-blue-600 text-white px-4 py-2 rounded cursor-pointer inline-block">
+        {uploading ? "Uploading..." : "Choose Picture"} {/* ändrar text när den laddar */}
 
-      {/* Gallery */}
-      {open && (
-        <div className="flex flex-wrap gap-2 mt-3">
-          {images.map((img, i) => (
-            <img
-              key={i}
-              src={img}
-              className="w-20 h-20 object-cover rounded cursor-pointer"
-              onClick={() => {
-                onSelect(img);
-                setOpen(false);
-              }}
-            />
-          ))}
+        <input
+          type="file"
+          accept="image/*" // bara bilder
+          hidden
+          onChange={handleFileChange}
+        />
+      </label>
+
+      {/* visar preview om bild finns */}
+      {preview && (
+        <div className="mt-3">
+          <img
+            src={preview}
+            alt="preview"
+            className="w-24 h-24 object-cover rounded border"
+          />
         </div>
       )}
     </div>
