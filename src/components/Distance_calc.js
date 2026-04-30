@@ -36,7 +36,7 @@ export function Calc_Distance_Multi(origin, destinations) {
             if(el.status === "OK"){
               return el.distance.value
             }else{
-              console.log("Error wrong adress")
+              console.log("Error wrong address", index)
             }
           });
           resolve(distances);
