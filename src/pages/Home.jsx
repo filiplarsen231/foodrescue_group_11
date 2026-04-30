@@ -50,6 +50,7 @@ export default function Home() {
             setLoadingDistance(true);
 
             const destinations = fetchedListings.map(l => l.address || '');
+            console.log("addres", destinations)
             
             const distances = await Calc_Distance_Multi(userAd, destinations);
             console.log("distnace test", distances)
@@ -59,7 +60,7 @@ export default function Home() {
                 ...item,
                 distanceText: distances[index] 
                   ? (distances[index] / 1000).toFixed(1) + " km" 
-                  : "Okänt avstånd"
+                  : "N/A"
               }));
               setListings(listWithDist);
             }
