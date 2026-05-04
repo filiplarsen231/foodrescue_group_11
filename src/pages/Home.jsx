@@ -150,6 +150,9 @@ export default function Home() {
               {item.expiry_date && (
                 <span className="text-xs font-bold text-red-500 uppercase">
                   Expiration Date: {item.expiry_date}
+                  {new Date(item.expiry_date) < new Date() && (
+                    <span className="ml-2 text-xs font-bold text-gray-700">Past</span>
+                  )}
                 </span>
               )}
             </div>

@@ -179,6 +179,9 @@ export default function Listings() {
               {item.expiry_date && (
                 <p className="text-xs font-bold text-red-500 uppercase">
                   Expires: {new Date(item.expiry_date).toLocaleDateString()}
+                  {new Date(item.expiry_date) < new Date() && (
+                    <span className="ml-2 text-xs font-bold text-gray-700">Past</span>
+                  )}
                 </p>
               )}
             </div>
