@@ -4,6 +4,8 @@ import About from './pages/About'
 import Listings from './pages/Listings'
 import Login from './pages/Login'
 import Account from './pages/Account'
+import ChatPage from './pages/ChatPage'
+import InboxPage from './pages/InboxPage'
 
 export default function App() {
   return (
@@ -12,6 +14,7 @@ export default function App() {
         <Link to="/" className="text-blue-600 hover:underline">Home</Link>
         <Link to="/about" className="text-blue-600 hover:underline">About</Link>
         <Link to="/listings" className="text-blue-600 hover:underline">My listings</Link>
+        <Link to="/inbox" className="text-blue-600 hover:underline">Inbox</Link>
         <Link to="/login" className="text-blue-600 hover:underline ml-auto">Login</Link>
         <Link to="/account" className="text-blue-600 hover:underline">Account</Link>
       </nav>
@@ -22,6 +25,8 @@ export default function App() {
         <Route path="/listings" element={<Listings />} />
         <Route path="/login" element={<Login />} />
         <Route path="/account" element={<Account />} />
+        <Route path="/messages/:id" element={<ChatPage />} />
+        <Route path="/inbox" element={<InboxPage />} />
       </Routes>
     </BrowserRouter>
   )

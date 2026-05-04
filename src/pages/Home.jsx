@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import ChoosePicture from '../components/ChoosePicture'
 import { Calc_Distance_Multi } from '../components/Distance_calc'
+import { useNavigate } from 'react-router-dom'
 
 export default function Home() {
+  const navigate = useNavigate()
   const [listings, setListings] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [loadingDistance, setLoadingDistance] = useState(false)
@@ -16,6 +18,54 @@ export default function Home() {
     address: '',
     image_url: '',
   })
+
+  const [user, setUser] = useState(null)
+  const [profileAddress, setProfileAddress] = useState('')
+
+  const handleContact = async (listing) => {
+    if (!user) {
+      alert("Du måste vara inloggad för att skicka meddelanden!")
+      return
+    }
+
+    if (user.id === listing.user_id) {
+      alert("Detta är din egen annons!")
+      return
+    }
+
+    // Kolla om en konversation redan finns för denna vara mellan dessa personer
+    const { data: existingChat, error: fetchError } = await supabase
+      .from('conversations')
+      .select('id')
+      .eq('listing_id', listing.id)
+      .eq('seeker_id', user.id)
+      .single()
+
+    if (existingChat) {
+      // Om chatten finns, gå till den
+      navigate(`/messages/${existingChat.id}`)
+    } else {
+      // Om chatten INTE finns, skapa en ny
+      const { data: newChat, error: createError } = await supabase
+        .from('conversations')
+        .insert([
+          {
+            listing_id: listing.id,
+            owner_id: listing.user_id,
+            seeker_id: user.id
+          }
+        ])
+        .select()
+        .single()
+
+      if (createError) {
+        console.error("Kunde inte skapa chatt:", createError.message)
+        alert("Gick inte att starta chatten.")
+      } else {
+        navigate(`/messages/${newChat.id}`)
+      }
+    }
+  }
 
   useEffect(() => {
     const initPage = async () => {
@@ -191,6 +241,12 @@ export default function Home() {
                 </span>
               )}
 
+              <button
+                onClick={() => handleContact(item)}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg transition text-sm"
+              >
+                I'm Interested / Chat
+              </button>
               {item.image_url && (
                 <img
                   src={item.image_url}
