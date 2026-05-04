@@ -1,6 +1,9 @@
 import { supabase } from "../lib/supabase"; // Importera klienten du nyss skapade
 import { useEffect, useState } from "react";
 import ChoosePicture from "../components/ChoosePicture"; 
+import { supabase } from '../lib/supabase'
+import { useEffect, useState } from 'react'
+import { Calc_Distance_Multi } from '../components/Distance_calc'
 
 export default function Home() {
   const [listings, setListings] = useState([]);
@@ -12,6 +15,18 @@ export default function Home() {
     expiry_date: "",
     image_url: "", // jag la till detta för att kunna spara bildens URL
   });
+  const [listings, setListings] = useState([])
+  const [laodingDistance, setLoadingDistance] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    expiry_date: '',
+    address: ''
+  })
+
+  const [user, setUser] = useState(null)
+  const [profileAddress, setProfileAddress] = useState('')
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -58,6 +73,100 @@ export default function Home() {
       console.log("Error adding listing:", error.message);
       alert("Failed to add listing!");
       return;
+    const initPage = async () => {
+      const { data: fetchedListings, error: listError } = await supabase
+        .from('Listings')
+        .select('*');
+
+      if (listError) {
+        console.log("Fel vid hämtning:", listError.message);
+        return;
+      }
+
+      
+      setListings(fetchedListings);
+
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
+      if (authUser) {
+        setUser(authUser);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('address')
+          .eq('id', authUser.id)
+          .single();
+
+        if (profile?.address) {
+          const userAd = profile.address;
+          setProfileAddress(userAd);
+          setFormData(prev => ({ ...prev, address: userAd }));
+
+          if (fetchedListings.length > 0) {
+            setLoadingDistance(true);
+
+            const destinations = fetchedListings.map(l => l.address || '');
+            console.log("addres", destinations)
+            
+            const distances = await Calc_Distance_Multi(userAd, destinations);
+            console.log("distnace test", distances)
+
+            if (distances) {
+              const listWithDist = fetchedListings.map((item, index) => ({
+                ...item,
+                distanceText: distances[index] 
+                  ? (distances[index] / 1000).toFixed(1) + " km" 
+                  : "N/A"
+              }));
+              setListings(listWithDist);
+            }
+            setLoadingDistance(false);
+          }
+        }
+      }
+    };
+
+    initPage();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+    
+    return () => authListener.subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    window.location.reload() // Enkel refresh för att rensa states
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    if (!user) {
+      alert("You must be logged in to create a listing!")
+      return
+    }
+    
+    // Include user_id in the listing data
+    const listingData = {
+      ...formData,
+      user_id: user.id
+    }
+    
+    const { data, error } = await supabase
+      .from('Listings')
+      .insert([listingData])
+      .select()
+    
+    if (error) {
+      console.log("Error adding listing:", error.message)
+      alert("Failed to add listing! Error: " + error.message) // Show actual error
+    } else {
+      console.log("Successfully added:", data)
+      setListings([...listings, ...data]) // Add new listing to the list
+      setShowModal(false) 
+      setFormData({ title: '', description: '', expiry_date: '', address: profileAddress })
+      alert("Listing added successfully!")
     }
 
     console.log("Successfully added:", data);
@@ -105,6 +214,10 @@ export default function Home() {
               className="p-4 border rounded-xl shadow-sm bg-white hover:shadow-md transition"
             >
               <h2 className="text-xl font-semibold">{item.title}</h2>
+              {item.distanceText &&(
+                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded">
+                  {item.distanceText}
+                </span>)}
 
               <p className="text-gray-500">{item.description}</p>
 
@@ -166,7 +279,21 @@ export default function Home() {
                   required
                   rows="3"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Describe the food item and amount..."
+                  placeholder="Describe the food item, amount and condition..."
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-gray-700 font-semibold mb-2">
+                  Address
+                </label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., Storgatan 1, Stockholm"
                 />
               </div>
 
