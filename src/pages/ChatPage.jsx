@@ -32,7 +32,6 @@ export default function ChatPage() {
         .select('*, Listings(title)')
         .eq('id', conversationId)
         .single()
-      
       setChatInfo(convData)
 
       // 3. Hämta gamla meddelanden
