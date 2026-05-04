@@ -1,6 +1,6 @@
 
 
-//Använd await innnan om du kallar denna funktion
+//Använd await innnan om du kallar denna funktion (funkar ej)
 async function Calc_Distance(origin, destination){
     
     const API_KEY = "AIzaSyCjNsLzUbZz1D522m-rb9DnCSTkcKLuV_M";
@@ -32,7 +32,13 @@ export function Calc_Distance_Multi(origin, destinations) {
       },
       (response, status) => {
         if (status === 'OK') {
-          const distances = response.rows[0].elements.map(el => el.distance.value);
+          const distances = response.rows[0].elements.map((el, index) => {
+            if(el.status === "OK"){
+              return el.distance.value
+            }else{
+              console.log("Error wrong address", index)
+            }
+          });
           resolve(distances);
         } else {
           reject(status);
