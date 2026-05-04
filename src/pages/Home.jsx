@@ -19,9 +19,6 @@ export default function Home() {
     image_url: '',
   })
 
-  const [user, setUser] = useState(null)
-  const [profileAddress, setProfileAddress] = useState('')
-
   const handleContact = async (listing) => {
     if (!user) {
       alert("Du måste vara inloggad för att skicka meddelanden!")
