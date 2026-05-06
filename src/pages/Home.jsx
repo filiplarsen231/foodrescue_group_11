@@ -128,11 +128,6 @@ export default function Home() {
     return () => authListener.subscription.unsubscribe()
   }, [])
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    window.location.reload()
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -191,22 +186,12 @@ export default function Home() {
           <p className="mt-2 text-gray-600">Welcome to the Food Rescue app!</p>
         </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={() => setShowModal(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition"
-          >
-            + Add New Listing
-          </button>
-          {user && (
-            <button
-              onClick={handleLogout}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-lg shadow-md transition"
-            >
-              Logout
-            </button>
-          )}
-        </div>
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition"
+        >
+          + Add New Listing
+        </button>
       </div>
 
       {loadingDistance && (
