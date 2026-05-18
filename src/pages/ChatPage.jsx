@@ -43,6 +43,14 @@ export default function ChatPage() {
       
       if (oldMessages) setMessages(oldMessages)
       scrollToBottom()
+
+      // 4. Markera notiser för denna konversation som lästa
+      await supabase
+        .from('notifications')
+        .update({ read_at: new Date().toISOString() })
+        .eq('user_id', authUser.id)
+        .eq('conversation_id', conversationId)
+        .is('read_at', null)
     }
 
     initChat()

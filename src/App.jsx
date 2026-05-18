@@ -1,5 +1,5 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router'
 import { useEffect, useState } from 'react'
+import { BrowserRouter, Routes, Route, Link } from 'react-router'
 import { supabase } from './lib/supabase'
 import Home from './pages/Home'
 import About from './pages/About'
@@ -8,22 +8,17 @@ import Login from './pages/Login'
 import Account from './pages/Account'
 import ChatPage from './pages/ChatPage'
 import InboxPage from './pages/InboxPage'
+import NotificationsBell from './components/NotificationsBell'
 
 export default function App() {
   const [user, setUser] = useState(null)
 
   useEffect(() => {
-    // Check initial auth state
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-    })
-
-    // Listen for auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null))
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
     })
-
-    return () => authListener.subscription.unsubscribe()
+    return () => sub.subscription.unsubscribe()
   }, [])
 
   const handleLogout = async () => {
@@ -32,17 +27,20 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <nav className="flex gap-4 p-4 bg-gray-100">
+      <nav className="flex items-center gap-4 p-4 bg-gray-100">
         <Link to="/" className="text-blue-600 hover:underline">Home</Link>
         <Link to="/about" className="text-blue-600 hover:underline">About</Link>
         <Link to="/listings" className="text-blue-600 hover:underline">My listings</Link>
         <Link to="/inbox" className="text-blue-600 hover:underline">Inbox</Link>
-        {!user ? (
-          <Link to="/login" className="text-blue-600 hover:underline ml-auto">Login</Link>
-        ) : (
-          <button onClick={handleLogout} className="text-blue-600 hover:underline ml-auto">Logout</button>
-        )}
-        {user && <Link to="/account" className="text-blue-600 hover:underline">Account</Link>}
+        <div className="ml-auto flex items-center gap-4">
+          {user && <NotificationsBell user={user} />}
+          {!user ? (
+            <Link to="/login" className="text-blue-600 hover:underline">Login</Link>
+          ) : (
+            <button onClick={handleLogout} className="text-blue-600 hover:underline">Logout</button>
+          )}
+          {user && <Link to="/account" className="text-blue-600 hover:underline">Account</Link>}
+        </div>
       </nav>
 
       <Routes>
