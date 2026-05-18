@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import ChoosePicture from '../components/ChoosePicture'
+import Camera from '../components/Camera'
 import { Calc_Distance_Multi } from '../components/Distance_calc'
 import { useNavigate } from 'react-router-dom'
 
@@ -11,12 +12,14 @@ export default function Home() {
   const [loadingDistance, setLoadingDistance] = useState(false)
   const [user, setUser] = useState(null)
   const [profileAddress, setProfileAddress] = useState('')
+  const [imagePreview, setImagePreview] = useState('')
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     expiry_date: '',
     address: '',
     image_url: '',
+    image_taken_at: '',
   })
 
   const handleContact = async (listing) => {
@@ -133,6 +136,16 @@ export default function Home() {
     window.location.reload()
   }
 
+  const handleImageSelect = (imageUrl, previewUrl, imageTakenAt) => {
+    setFormData((prev) => ({
+      ...prev,
+      image_url: imageUrl,
+      image_taken_at: imageTakenAt || Date.now(),
+    }))
+
+    setImagePreview(previewUrl || imageUrl)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -152,6 +165,7 @@ export default function Home() {
       expiry_date: formData.expiry_date || null,
       address: formData.address,
       image_url: formData.image_url,
+      image_taken_at: formData.image_taken_at || Date.now(),
       user_id: user.id,
     }
 
@@ -174,13 +188,28 @@ export default function Home() {
       expiry_date: '',
       address: profileAddress,
       image_url: '',
+      image_taken_at: '',
     })
+    setImagePreview('')
     alert('Listing added successfully!')
   }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  function daysAgo(timestamp) {
+    if (!timestamp) return "Picture taken today"
+
+    const now = Date.now()
+    const diffMs = now - Number(timestamp)
+    const days = Math.floor(diffMs / 86400000)
+
+    if (days <= 0) return "Picture taken today"
+    if (days === 1) return "Picture taken 1 day ago"
+
+    return `Picture taken ${days} days ago`
   }
 
   return (
@@ -245,11 +274,17 @@ export default function Home() {
                 I'm Interested / Chat
               </button>
               {item.image_url && (
-                <img
-                  src={item.image_url}
-                  alt={item.title}
-                  className="w-full h-40 object-cover rounded mt-3"
-                />
+                <>
+                  <img
+                    src={item.image_url}
+                    alt={item.title}
+                    className="w-full h-40 object-cover rounded mt-3"
+                  />
+
+                  <p className="text-xs text-gray-500 mt-1">
+                    {daysAgo(item.image_taken_at)}
+                  </p>
+                </>
               )}
             </div>
           ))
@@ -321,11 +356,24 @@ export default function Home() {
                 />
               </div>
 
-              <ChoosePicture
-                onSelect={(imageUrl) => {
-                  setFormData((prev) => ({ ...prev, image_url: imageUrl }))
-                }}
-              />
+              <div className="mb-6">
+                <p className="font-semibold mb-2">Add Picture</p>
+
+                <div className="flex gap-3 items-start">
+                  <ChoosePicture onSelect={handleImageSelect} />
+                  <Camera onSelect={handleImageSelect} />
+                </div>
+
+                {imagePreview && (
+                  <div className="mt-3">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-24 h-24 object-cover rounded border"
+                    />
+                  </div>
+                )}
+              </div>
 
               <div className="flex gap-3 mt-6">
                 <button
@@ -337,7 +385,18 @@ export default function Home() {
 
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    setShowModal(false)
+                    setFormData({
+                      title: '',
+                      description: '',
+                      expiry_date: '',
+                      address: profileAddress,
+                      image_url: '',
+                      image_taken_at: '',
+                    })
+                    setImagePreview('')
+                  }}
                   className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg transition"
                 >
                   Cancel
