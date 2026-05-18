@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router'
+import { useEffect, useState } from 'react'
+import { supabase } from './lib/supabase'
 import Home from './pages/Home'
 import About from './pages/About'
 import Listings from './pages/Listings'
@@ -8,6 +10,26 @@ import ChatPage from './pages/ChatPage'
 import InboxPage from './pages/InboxPage'
 
 export default function App() {
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    // Check initial auth state
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+    })
+
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => authListener.subscription.unsubscribe()
+  }, [])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+  }
+
   return (
     <BrowserRouter>
       <nav className="flex gap-4 p-4 bg-gray-100">
@@ -15,8 +37,12 @@ export default function App() {
         <Link to="/about" className="text-blue-600 hover:underline">About</Link>
         <Link to="/listings" className="text-blue-600 hover:underline">My listings</Link>
         <Link to="/inbox" className="text-blue-600 hover:underline">Inbox</Link>
-        <Link to="/login" className="text-blue-600 hover:underline ml-auto">Login</Link>
-        <Link to="/account" className="text-blue-600 hover:underline">Account</Link>
+        {!user ? (
+          <Link to="/login" className="text-blue-600 hover:underline ml-auto">Login</Link>
+        ) : (
+          <button onClick={handleLogout} className="text-blue-600 hover:underline ml-auto">Logout</button>
+        )}
+        {user && <Link to="/account" className="text-blue-600 hover:underline">Account</Link>}
       </nav>
 
       <Routes>

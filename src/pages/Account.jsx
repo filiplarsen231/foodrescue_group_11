@@ -111,7 +111,10 @@ export default function Account() {
       updated_at: new Date().toISOString(),
     })
     if (error) alert(error.message)
-    else alert('Profile saved!')
+    else {
+      alert('Profile saved!')
+      navigate('/')
+    }
     setSaving(false)
   }
 

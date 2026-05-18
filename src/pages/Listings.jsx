@@ -167,6 +167,14 @@ export default function Listings() {
                   </button>
                 </div>
               </div>
+
+              {item.image_url && (
+                <img
+                  src={item.image_url}
+                  alt={item.title}
+                  className="w-full h-40 object-cover rounded mb-3"
+                />
+              )}
               
               <p className="text-gray-600 mb-3">{item.description}</p>
               
