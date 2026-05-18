@@ -13,6 +13,8 @@ export default function Home() {
   const [user, setUser] = useState(null)
   const [profileAddress, setProfileAddress] = useState('')
   const [imagePreview, setImagePreview] = useState('')
+  const [selectedListing, setSelectedListing] = useState(null)
+  const [ownerName, setOwnerName] = useState('')
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -21,6 +23,23 @@ export default function Home() {
     image_url: '',
     image_taken_at: '',
   })
+
+  const openListing = async (listing) => {
+    setSelectedListing(listing)
+    setOwnerName('')
+    const { data } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', listing.user_id)
+      .single()
+    const firstName = data?.full_name?.trim().split(/\s+/)[0] || 'Someone'
+    setOwnerName(firstName)
+  }
+
+  const closeListing = () => {
+    setSelectedListing(null)
+    setOwnerName('')
+  }
 
   const handleContact = async (listing) => {
     if (!user) {
@@ -131,6 +150,13 @@ export default function Home() {
     return () => authListener.subscription.unsubscribe()
   }, [])
 
+  useEffect(() => {
+    if (!selectedListing) return
+    const onKey = (e) => { if (e.key === 'Escape') closeListing() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [selectedListing])
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     window.location.reload()
@@ -237,51 +263,116 @@ export default function Home() {
           listings.map((item) => (
             <div
               key={item.id}
-              className="p-4 border rounded-xl shadow-sm bg-white hover:shadow-md transition"
+              onClick={() => openListing(item)}
+              className="border rounded-xl shadow-sm bg-white hover:shadow-md transition cursor-pointer overflow-hidden"
             >
-              <h2 className="text-xl font-semibold">{item.title}</h2>
-              {item.distanceText && (
-                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded">
-                  {item.distanceText}
-                </span>
+              {item.image_url ? (
+                <img
+                  src={item.image_url}
+                  alt={item.title}
+                  className="w-full h-40 object-cover"
+                />
+              ) : (
+                <div className="w-full h-40 bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+                  No image
+                </div>
               )}
-
-              <p className="text-gray-500">{item.description}</p>
-
-              {item.expiry_date && (
-                <span className="text-xs font-bold text-red-500 uppercase">
-                  Expiration Date: {item.expiry_date}
-                  {new Date(item.expiry_date) < new Date() && (
-                    <span className="ml-2 text-xs font-bold text-gray-700">Past</span>
-                  )}
-                </span>
-              )}
-
-              <button
-                onClick={() => handleContact(item)}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg transition text-sm"
-              >
-                I'm Interested / Chat
-              </button>
-              {item.image_url && (
-                <>
-                  <img
-                    src={item.image_url}
-                    alt={item.title}
-                    className="w-full h-40 object-cover rounded mt-3"
-                  />
-
-                  <p className="text-xs text-gray-500 mt-1">
-                    {daysAgo(item.image_taken_at)}
+              <div className="p-4">
+                <h2 className="text-lg font-semibold text-gray-800">{item.title}</h2>
+                {item.distanceText && (
+                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded mt-2 inline-block">
+                    {item.distanceText}
+                  </span>
+                )}
+                {item.expiry_date && (
+                  <p className="text-xs font-bold text-gray-900 uppercase mt-2">
+                    Expiration date: {item.expiry_date}
+                    {new Date(item.expiry_date) < new Date() && (
+                      <span className="ml-2 text-xs font-bold text-gray-700">Past</span>
+                    )}
                   </p>
-                </>
-              )}
+                )}
+              </div>
             </div>
           ))
         ) : (
           <p>Laddar matvaror... (eller så är listan tom)</p>
         )}
       </div>
+
+      {selectedListing && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-40"
+          onClick={(e) => { if (e.target === e.currentTarget) closeListing() }}
+        >
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
+            <button
+              onClick={closeListing}
+              aria-label="Close"
+              className="absolute top-3 right-3 bg-white/90 hover:bg-gray-100 rounded-full w-9 h-9 flex items-center justify-center shadow text-gray-700 z-10"
+            >
+              ✕
+            </button>
+
+            {selectedListing.image_url && (
+              <img
+                src={selectedListing.image_url}
+                alt={selectedListing.title}
+                className="w-full h-64 object-cover rounded-t-2xl"
+              />
+            )}
+
+            <div className="p-6 space-y-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{selectedListing.title}</h2>
+                {selectedListing.distanceText && (
+                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded mt-2 inline-block">
+                    {selectedListing.distanceText}
+                  </span>
+                )}
+              </div>
+
+              {selectedListing.description && (
+                <p className="text-gray-700 whitespace-pre-wrap">{selectedListing.description}</p>
+              )}
+
+              {selectedListing.expiry_date && (
+                <div className="text-sm">
+                  <span className="font-semibold text-gray-700">Expiration date: </span>
+                  <span className="text-gray-900 font-bold">{selectedListing.expiry_date}</span>
+                  {new Date(selectedListing.expiry_date) < new Date() && (
+                    <span className="ml-2 text-xs font-bold text-gray-700 uppercase">Past</span>
+                  )}
+                </div>
+              )}
+
+              {selectedListing.address && (
+                <div className="text-sm">
+                  <span className="font-semibold text-gray-700">Address: </span>
+                  <span className="text-gray-600">{selectedListing.address}</span>
+                </div>
+              )}
+
+              {selectedListing.image_url && (
+                <p className="text-xs text-gray-500">{daysAgo(selectedListing.image_taken_at)}</p>
+              )}
+
+              {ownerName && (
+                <p className="text-sm text-gray-600">
+                  Listed by <span className="font-semibold">{ownerName}</span>
+                </p>
+              )}
+
+              <button
+                onClick={() => handleContact(selectedListing)}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition"
+              >
+                I'm Interested / Chat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
