@@ -41,10 +41,7 @@ export default function NotificationsBell({ user }) {
 
   // Fetch existing notifications + subscribe to new ones
   useEffect(() => {
-    if (!user) {
-      setItems([])
-      return
-    }
+    if (!user) return
 
     let cancelled = false
 
