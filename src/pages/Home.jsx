@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import ChoosePicture from '../components/ChoosePicture'
 import Camera from '../components/Camera'
@@ -161,6 +161,76 @@ export default function Home() {
     await supabase.auth.signOut()
     window.location.reload()
   }
+
+  const addressInputRef = useRef(null)
+
+  useEffect(() => {
+    let checkGoogleInterval = null;
+    let autocomplete = null;
+
+    // Vi kör bara detta om modalen är öppen
+    if (showModal) {
+      const initGooglePlaces = () => {
+        if (addressInputRef.current && window.google && window.google.maps && window.google.maps.places) {
+          autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+            types: ["address"],
+            componentRestrictions: { country: "se" },
+          })
+
+          autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace()
+            
+            let streetName = "";
+            let streetNumber = "";
+            let city = "";
+
+            if (place.address_components) {
+              for (const component of place.address_components) {
+                if (component.types.includes("route")) streetName = component.long_name;
+                if (component.types.includes("street_number")) streetNumber = component.long_name;
+                if (component.types.includes("postal_town") || component.types.includes("locality")) city = component.long_name;
+              }
+            }
+
+            if (!streetNumber) {
+              alert("Vänligen skriv med ditt husnummer i adressfältet!");
+              return;
+            }
+
+            const perfectAddress = `${streetName} ${streetNumber}, ${city}, Sverige`;
+            
+            // Uppdatera formData med den nya adressen
+            setFormData(prev => ({ ...prev, address: perfectAddress }));
+            
+            // Tvinga input-fältet att visa den formaterade adressen direkt
+            if (addressInputRef.current) {
+              addressInputRef.current.value = perfectAddress;
+            }
+          })
+        }
+      }
+
+      // Kolla om Google är laddat, kör isåfall init direkt
+      if (window.google && window.google.maps) {
+        initGooglePlaces();
+      } else {
+        // Annars, polla tills det är laddat
+        checkGoogleInterval = setInterval(() => {
+          if (window.google && window.google.maps) {
+            clearInterval(checkGoogleInterval)
+            initGooglePlaces()
+          }
+        }, 500)
+      }
+    }
+
+    // Cleanup-funktion: Rensar intervallet om modalen stängs innan Google hann laddas
+    return () => {
+      if (checkGoogleInterval) clearInterval(checkGoogleInterval)
+      // För att undvika minnesläckor kan vi också nolla autocomplete-instansen här om vi velat,
+      // men Google sköter oftast det bra när input-elementet försvinner.
+    }
+  }, [showModal])
 
   const handleImageSelect = (imageUrl, previewUrl, imageTakenAt) => {
     setFormData((prev) => ({
@@ -415,10 +485,18 @@ export default function Home() {
                   Address
                 </label>
                 <input
+                  ref={addressInputRef} // Koppla referensen
                   type="text"
                   name="address"
-                  value={formData.address}
+                  // Vi sätter defaultValue istället för value så att Autocomplete kan sköta fältet smidigare
+                  defaultValue={formData.address} 
                   onChange={handleInputChange}
+                  onKeyDown={(e) => {
+                    // Förhindra att formuläret skickas om man trycker Enter i adresslistan
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                    }
+                  }}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g., Storgatan 1, Stockholm"
                 />
@@ -489,4 +567,4 @@ export default function Home() {
       )}
     </div>
   )
-}
+} 
