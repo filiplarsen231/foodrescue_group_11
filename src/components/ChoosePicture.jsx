@@ -37,7 +37,7 @@ onSelect(publicUrl, previewUrl, file.lastModified);
 
   return (
     <div>
-      <label className="bg-blue-600 text-white px-4 py-2 rounded cursor-pointer inline-block">
+      <label className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded cursor-pointer inline-block font-medium transition">
         {uploading ? "Uploading..." : "Choose Picture"}
 
         <input

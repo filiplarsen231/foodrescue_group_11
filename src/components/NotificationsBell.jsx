@@ -152,7 +152,7 @@ export default function NotificationsBell({ user }) {
     <div className="relative" ref={wrapperRef}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="relative p-2 rounded-full hover:bg-gray-200 transition"
+        className="relative p-2 rounded-full hover:bg-green-50 transition"
         aria-label="Notifications"
       >
         <svg
@@ -177,8 +177,8 @@ export default function NotificationsBell({ user }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white border rounded-xl shadow-lg z-50 overflow-hidden">
-          <div className="px-4 py-3 border-b font-semibold text-gray-800">
+        <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-200 font-semibold text-green-800">
             Notifications
           </div>
           <div className="max-h-96 overflow-y-auto">
@@ -195,7 +195,7 @@ export default function NotificationsBell({ user }) {
                   <button
                     key={n.id}
                     onClick={() => handleClickNotification(n)}
-                    className={`w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 transition ${
+                    className={`w-full text-left px-4 py-3 border-b border-gray-200 last:border-b-0 hover:bg-green-50/60 transition ${
                       !n.read_at ? 'bg-green-50' : ''
                     }`}
                   >

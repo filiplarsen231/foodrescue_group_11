@@ -309,18 +309,19 @@ export default function Home() {
   }
 
   return (
-    <div className="p-8">
+    <div className="max-w-7xl mx-auto p-8">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Food Feed</h1>
+          <h1 className="text-3xl font-bold text-green-800">Food Feed</h1>
           <p className="mt-2 text-gray-600">Welcome to the Food Rescue app!</p>
         </div>
 
         <button
           onClick={() => setShowModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition"
+          className="inline-flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white font-semibold px-5 py-2.5 rounded-full shadow-sm hover:shadow-md transition"
         >
-          + Add New Listing
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/20 text-base leading-none">+</span>
+          Add New Listing
         </button>
       </div>
 
@@ -328,126 +329,154 @@ export default function Home() {
         <p className="text-sm text-gray-500 mb-2">Calculating distances…</p>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-6">
         {listings.length > 0 ? (
-          listings.map((item) => (
-            <div
-              key={item.id}
-              onClick={() => openListing(item)}
-              className="border rounded-xl shadow-sm bg-white hover:shadow-md transition cursor-pointer overflow-hidden"
-            >
-              {item.image_url ? (
-                <img
-                  src={item.image_url}
-                  alt={item.title}
-                  className="w-full h-40 object-cover"
-                />
-              ) : (
-                <div className="w-full h-40 bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
-                  No image
-                </div>
-              )}
-              <div className="p-4">
-                <h2 className="text-lg font-semibold text-gray-800">{item.title}</h2>
-                {item.distanceText && (
-                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded mt-2 inline-block">
-                    {item.distanceText}
-                  </span>
-                )}
-                {item.expiry_date && (
-                  <p className="text-xs font-bold text-gray-900 uppercase mt-2">
-                    Expiration date: {item.expiry_date}
-                    {new Date(item.expiry_date) < new Date() && (
-                      <span className="ml-2 text-xs font-bold text-gray-700">Past</span>
+          listings.map((item) => {
+            const isPast = item.expiry_date && new Date(item.expiry_date) < new Date()
+            return (
+              <div
+                key={item.id}
+                onClick={() => openListing(item)}
+                className="group border border-gray-200 rounded-2xl shadow-sm bg-white hover:shadow-md hover:border-green-300 transition cursor-pointer overflow-hidden flex flex-col"
+              >
+                {item.image_url ? (
+                  <div className="relative overflow-hidden">
+                    <img
+                      src={item.image_url}
+                      alt={item.title}
+                      className="w-full h-44 object-cover group-hover:scale-105 transition duration-300"
+                    />
+                    {item.distanceText && (
+                      <span className="absolute top-3 left-3 bg-white/90 backdrop-blur text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm">
+                        {item.distanceText}
+                      </span>
                     )}
-                  </p>
+                  </div>
+                ) : (
+                  <div className="w-full h-44 bg-green-50 flex items-center justify-center text-green-700/60 text-sm font-medium">
+                    No image
+                  </div>
                 )}
+                <div className="p-4 flex flex-col gap-2 flex-grow">
+                  <h2 className="text-lg font-semibold text-gray-900 group-hover:text-green-800 transition line-clamp-1">
+                    {item.title}
+                  </h2>
+                  <div className="flex items-center gap-2 mt-auto pt-1">
+                    {item.expiry_date ? (
+                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                        isPast
+                          ? "bg-red-50 text-red-700 border border-red-200"
+                          : "bg-green-50 text-green-800 border border-green-200"
+                      }`}>
+                        {isPast ? "Expired" : "Expires"} {new Date(item.expiry_date).toLocaleDateString()}
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-50 text-gray-600 border border-gray-200">
+                        Expiry unknown
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))
+            )
+          })
         ) : (
-          <p>Laddar matvaror... (eller så är listan tom)</p>
+          <p className="text-gray-500 col-span-full">Laddar matvaror... (eller så är listan tom)</p>
         )}
       </div>
 
-      {selectedListing && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-40"
-          onClick={(e) => { if (e.target === e.currentTarget) closeListing() }}
-        >
-          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
-            <button
-              onClick={closeListing}
-              aria-label="Close"
-              className="absolute top-3 right-3 bg-white/90 hover:bg-gray-100 rounded-full w-9 h-9 flex items-center justify-center shadow text-gray-700 z-10"
-            >
-              ✕
-            </button>
+      {selectedListing && (() => {
+        const isPast = selectedListing.expiry_date && new Date(selectedListing.expiry_date) < new Date()
+        return (
+          <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-40"
+            onClick={(e) => { if (e.target === e.currentTarget) closeListing() }}
+          >
+            <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 relative">
+              <button
+                onClick={closeListing}
+                aria-label="Close"
+                className="absolute top-3 right-3 bg-white/95 hover:bg-green-50 hover:text-green-800 rounded-full w-9 h-9 flex items-center justify-center shadow text-gray-700 z-10 transition"
+              >
+                ✕
+              </button>
 
-            {selectedListing.image_url && (
-              <img
-                src={selectedListing.image_url}
-                alt={selectedListing.title}
-                className="w-full h-64 object-cover rounded-t-2xl"
-              />
-            )}
-
-            <div className="p-6 space-y-4">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">{selectedListing.title}</h2>
-                {selectedListing.distanceText && (
-                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded mt-2 inline-block">
-                    {selectedListing.distanceText}
-                  </span>
-                )}
-              </div>
-
-              {selectedListing.description && (
-                <p className="text-gray-700 whitespace-pre-wrap">{selectedListing.description}</p>
+              {selectedListing.image_url ? (
+                <img
+                  src={selectedListing.image_url}
+                  alt={selectedListing.title}
+                  className="w-full h-64 object-cover rounded-t-2xl"
+                />
+              ) : (
+                <div className="w-full h-64 bg-green-50 flex items-center justify-center text-green-700/60 font-medium rounded-t-2xl">
+                  No image
+                </div>
               )}
 
-              {selectedListing.expiry_date && (
-                <div className="text-sm">
-                  <span className="font-semibold text-gray-700">Expiration date: </span>
-                  <span className="text-gray-900 font-bold">{selectedListing.expiry_date}</span>
-                  {new Date(selectedListing.expiry_date) < new Date() && (
-                    <span className="ml-2 text-xs font-bold text-gray-700 uppercase">Past</span>
+              <div className="p-6 space-y-5">
+                <div>
+                  <h2 className="text-2xl font-bold text-green-800">{selectedListing.title}</h2>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {selectedListing.distanceText && (
+                      <span className="bg-green-50 text-green-800 border border-green-200 text-xs font-semibold px-2.5 py-1 rounded-full">
+                        📍 {selectedListing.distanceText}
+                      </span>
+                    )}
+                    {selectedListing.expiry_date ? (
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
+                        isPast
+                          ? "bg-red-50 text-red-700 border-red-200"
+                          : "bg-green-50 text-green-800 border-green-200"
+                      }`}>
+                        {isPast ? "Expired" : "Expires"} {new Date(selectedListing.expiry_date).toLocaleDateString()}
+                      </span>
+                    ) : (
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-50 text-gray-600 border border-gray-200">
+                        Expiry unknown
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {selectedListing.description && (
+                  <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{selectedListing.description}</p>
+                )}
+
+                <div className="border-t border-gray-200 pt-4 space-y-2 text-sm">
+                  {selectedListing.address && (
+                    <div className="flex gap-2">
+                      <span className="font-semibold text-gray-700 min-w-[80px]">Address</span>
+                      <span className="text-gray-600">{selectedListing.address}</span>
+                    </div>
+                  )}
+                  {ownerName && (
+                    <div className="flex gap-2">
+                      <span className="font-semibold text-gray-700 min-w-[80px]">Listed by</span>
+                      <span className="text-gray-600">{ownerName}</span>
+                    </div>
+                  )}
+                  {selectedListing.image_url && (
+                    <p className="text-xs text-gray-500 pt-1">{daysAgo(selectedListing.image_taken_at)}</p>
                   )}
                 </div>
-              )}
 
-              {selectedListing.address && (
-                <div className="text-sm">
-                  <span className="font-semibold text-gray-700">Address: </span>
-                  <span className="text-gray-600">{selectedListing.address}</span>
-                </div>
-              )}
-
-              {selectedListing.image_url && (
-                <p className="text-xs text-gray-500">{daysAgo(selectedListing.image_taken_at)}</p>
-              )}
-
-              {ownerName && (
-                <p className="text-sm text-gray-600">
-                  Listed by <span className="font-semibold">{ownerName}</span>
-                </p>
-              )}
-
-              <button
-                onClick={() => handleContact(selectedListing)}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition"
-              >
-                I'm Interested / Chat
-              </button>
+                <button
+                  onClick={() => handleContact(selectedListing)}
+                  className="w-full inline-flex items-center justify-center gap-2 bg-green-700 hover:bg-green-800 text-white font-semibold py-3 rounded-full shadow-sm hover:shadow-md transition"
+                >
+                  <span>💬</span>
+                  I'm Interested · Start chat
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl">
-            <h2 className="text-2xl font-bold mb-4">Add New Listing</h2>
+            <h2 className="text-2xl font-bold mb-4 text-green-800">Add New Listing</h2>
 
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
@@ -460,7 +489,7 @@ export default function Home() {
                   value={formData.title}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                   placeholder="e.g., Fresh Vegetables"
                 />
               </div>
@@ -475,7 +504,7 @@ export default function Home() {
                   onChange={handleInputChange}
                   required
                   rows="3"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                   placeholder="Describe the food item, amount and condition..."
                 />
               </div>
@@ -497,7 +526,7 @@ export default function Home() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                   placeholder="e.g., Storgatan 1, Stockholm"
                 />
               </div>
@@ -511,7 +540,7 @@ export default function Home() {
                   name="expiry_date"
                   value={formData.expiry_date}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
 
@@ -537,7 +566,7 @@ export default function Home() {
               <div className="flex gap-3 mt-6">
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition"
                 >
                   Submit
                 </button>

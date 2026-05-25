@@ -47,8 +47,8 @@ export default function InboxPage() {
   return (
     <div className="flex h-[calc(100vh-64px)] bg-white">
       {/* Sidebar */}
-      <aside className="w-80 border-r flex flex-col bg-white">
-        <div className="p-4 border-b">
+      <aside className="w-80 border-r border-gray-200 flex flex-col bg-white">
+        <div className="p-4 border-b border-gray-200">
           <h1 className="text-2xl font-bold text-green-800">Mina Meddelanden</h1>
         </div>
 
@@ -65,10 +65,10 @@ export default function InboxPage() {
                 <button
                   key={chat.id}
                   onClick={() => navigate(`/inbox/${chat.id}`)}
-                  className={`w-full text-left p-4 border-b transition ${
+                  className={`w-full text-left p-4 border-b border-gray-200 transition ${
                     isSelected
                       ? "bg-green-50 border-l-4 border-l-green-600"
-                      : "hover:bg-gray-50 border-l-4 border-l-transparent"
+                      : "hover:bg-green-50/60 border-l-4 border-l-transparent"
                   }`}
                 >
                   <h2 className="font-semibold text-gray-800 truncate">
@@ -76,8 +76,8 @@ export default function InboxPage() {
                   </h2>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded mt-1 inline-block uppercase tracking-wider ${
                     isOwner
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-green-100 text-green-800"
+                      ? "bg-green-100 text-green-800"
+                      : "border border-green-600 text-green-700 bg-white"
                   }`}>
                     {roleText}
                   </span>

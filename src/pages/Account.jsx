@@ -123,67 +123,90 @@ export default function Account() {
     navigate('/login')
   }
 
-  if (loading) return <p className="p-8">Loading...</p>
+  if (loading) return <p className="p-8 text-gray-500">Loading...</p>
+
+  const initials = (fullName || user?.email || '?')
+    .trim()
+    .split(/\s+/)
+    .map((s) => s[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+
+  const inputClass =
+    "w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
-      <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl">
-        <h1 className="text-2xl font-bold text-center mb-6 text-green-700">My Account</h1>
-
-        <form onSubmit={handleSave} className="space-y-4">
+    <div className="max-w-2xl mx-auto p-6 md:p-8">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-br from-green-700 to-green-600 px-6 py-8 text-white flex items-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-xl font-bold border border-white/30">
+            {initials}
+          </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+            <h1 className="text-2xl font-bold">My Account</h1>
+            <p className="text-sm text-green-50/90 mt-0.5">{user.email}</p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSave} className="p-6 md:p-8 space-y-5">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
             <input
               type="email"
               value={user.email}
               disabled
-              className="w-full p-3 border rounded-lg bg-gray-100 text-gray-600"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Name</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Name</label>
             <input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full p-3 border rounded-lg text-black"
+              className={inputClass}
+              placeholder="Ditt fullständiga namn"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Address</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Address</label>
             <input
               ref={addressInputRef}
               type="text"
-              defaultValue={address} // Visar adressen som finns i databasen
-              onChange={(e) => setAddress(e.target.value)} 
-              className="w-full p-3 border rounded-lg text-black"
+              defaultValue={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className={inputClass}
               placeholder="Börja skriva din adress..."
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Phone</label>
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full p-3 border rounded-lg text-black"
+              className={inputClass}
+              placeholder="+46 ..."
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full bg-green-600 text-white p-3 rounded-lg font-bold hover:bg-green-700 disabled:bg-gray-400"
-          >
-            {saving ? 'Saving...' : 'Save'}
-          </button>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="w-full border border-red-500 text-red-500 p-3 rounded-lg font-bold hover:bg-red-50"
-          >
-            Log out
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 bg-green-700 hover:bg-green-800 text-white font-semibold py-3 rounded-full shadow-sm hover:shadow-md transition disabled:bg-gray-300 disabled:shadow-none"
+            >
+              {saving ? 'Saving...' : 'Save changes'}
+            </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex-1 border border-red-300 text-red-600 font-semibold py-3 rounded-full hover:bg-red-50 transition"
+            >
+              Log out
+            </button>
+          </div>
         </form>
       </div>
     </div>

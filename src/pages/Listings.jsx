@@ -113,7 +113,7 @@ export default function Listings() {
         <p className="text-gray-600 mb-6">You need to be logged in to view your listings.</p>
         <button
           onClick={() => navigate('/login')}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+          className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 font-semibold"
         >
           Go to Login
         </button>
@@ -122,17 +122,18 @@ export default function Listings() {
   }
 
   return (
-    <div className="p-8">
+    <div className="max-w-7xl mx-auto p-8">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">My Listings</h1>
+          <h1 className="text-3xl font-bold text-green-800">My Listings</h1>
           <p className="mt-2 text-gray-600">Manage your food rescue listings</p>
         </div>
         <button
           onClick={() => navigate('/')}
-          className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-semibold"
+          className="inline-flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white font-semibold px-5 py-2.5 rounded-full shadow-sm hover:shadow-md transition"
         >
-          + Create New Listing
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/20 text-base leading-none">+</span>
+          Create New Listing
         </button>
       </div>
 
@@ -141,7 +142,7 @@ export default function Listings() {
           <p className="text-gray-500 mb-4">You haven't created any listings yet.</p>
           <button
             onClick={() => navigate('/')}
-            className="text-blue-600 hover:underline"
+            className="text-green-700 hover:underline font-medium"
           >
             Create your first listing
           </button>
@@ -149,13 +150,13 @@ export default function Listings() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {listings.map((item) => (
-            <div key={item.id} className="p-6 border rounded-xl shadow-sm bg-white hover:shadow-md transition">
+            <div key={item.id} className="p-6 border border-gray-200 rounded-xl shadow-sm bg-white hover:shadow-md hover:border-green-300 transition">
               <div className="flex justify-between items-start mb-3">
                 <h2 className="text-xl font-semibold">{item.title}</h2>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleEdit(item)}
-                    className="text-blue-500 hover:text-blue-700 text-sm font-medium"
+                    className="text-green-700 hover:text-green-800 text-sm font-medium"
                   >
                     Edit
                   </button>
@@ -184,14 +185,25 @@ export default function Listings() {
                 </p>
               )}
               
-              {item.expiry_date && (
-                <p className="text-xs font-bold text-red-500 uppercase">
-                  Expires: {new Date(item.expiry_date).toLocaleDateString()}
-                  {new Date(item.expiry_date) < new Date() && (
-                    <span className="ml-2 text-xs font-bold text-gray-700">Past</span>
-                  )}
-                </p>
-              )}
+              {(() => {
+                const isPast = item.expiry_date && new Date(item.expiry_date) < new Date()
+                if (!item.expiry_date) {
+                  return (
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-50 text-gray-600 border border-gray-200 inline-block">
+                      Expiry unknown
+                    </span>
+                  )
+                }
+                return (
+                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full inline-block ${
+                    isPast
+                      ? "bg-red-50 text-red-700 border border-red-200"
+                      : "bg-green-50 text-green-800 border border-green-200"
+                  }`}>
+                    {isPast ? "Expired" : "Expires"} {new Date(item.expiry_date).toLocaleDateString()}
+                  </span>
+                )
+              })()}
             </div>
           ))}
         </div>
@@ -201,7 +213,7 @@ export default function Listings() {
       {editingListing && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl">
-            <h2 className="text-2xl font-bold mb-4">Edit Listing</h2>
+            <h2 className="text-2xl font-bold mb-4 text-green-800">Edit Listing</h2>
             
             <form onSubmit={handleEditSubmit}>
               <div className="mb-4">
@@ -214,7 +226,7 @@ export default function Listings() {
                   value={editFormData.title}
                   onChange={handleEditInputChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
 
@@ -228,7 +240,7 @@ export default function Listings() {
                   onChange={handleEditInputChange}
                   required
                   rows="3"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
 
@@ -241,7 +253,7 @@ export default function Listings() {
                   name="address"
                   value={editFormData.address}
                   onChange={handleEditInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
 
@@ -254,14 +266,14 @@ export default function Listings() {
                   name="expiry_date"
                   value={editFormData.expiry_date}
                   onChange={handleEditInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
 
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition"
                 >
                   Save Changes
                 </button>

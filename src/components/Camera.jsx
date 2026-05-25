@@ -119,7 +119,7 @@ export default function Camera({ onSelect }) {
       <button
         type="button"
         onClick={openCamera}
-        className="bg-blue-600 text-white px-4 py-2 rounded cursor-pointer inline-block"
+        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded cursor-pointer inline-block font-medium transition"
       >
         Take Picture
       </button>
