@@ -1,32 +1,25 @@
 import { useEffect, useState, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
-export default function ChatPage() {
-  const { id: conversationId } = useParams() // Hämtar ID från URL:en
-  const navigate = useNavigate()
+export default function ChatPanel({ conversationId }) {
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState('')
   const [user, setUser] = useState(null)
   const [chatInfo, setChatInfo] = useState(null)
-  const messagesEndRef = useRef(null) // För att scrolla till botten
+  const messagesEndRef = useRef(null)
 
-  // Scrolla till botten när nya meddelanden kommer
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
   useEffect(() => {
+    if (!conversationId) return
+
     const initChat = async () => {
-      // 1. Kolla användare
       const { data: { user: authUser } } = await supabase.auth.getUser()
-      if (!authUser) {
-        navigate('/login')
-        return
-      }
+      if (!authUser) return
       setUser(authUser)
 
-      // 2. Hämta info om konversationen (vad pratar vi om?)
       const { data: convData } = await supabase
         .from('conversations')
         .select('*, Listings(title)')
@@ -34,17 +27,15 @@ export default function ChatPage() {
         .single()
       setChatInfo(convData)
 
-      // 3. Hämta gamla meddelanden
       const { data: oldMessages } = await supabase
         .from('messages')
         .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true })
-      
-      if (oldMessages) setMessages(oldMessages)
-      scrollToBottom()
 
-      // 4. Markera notiser för denna konversation som lästa
+      if (oldMessages) setMessages(oldMessages)
+      setTimeout(scrollToBottom, 50)
+
       await supabase
         .from('notifications')
         .update({ read_at: new Date().toISOString() })
@@ -55,7 +46,6 @@ export default function ChatPage() {
 
     initChat()
 
-    // 4. REALTIME: Lyssna på nya meddelanden
     const channel = supabase
       .channel(`chat-${conversationId}`)
       .on(
@@ -68,13 +58,15 @@ export default function ChatPage() {
         },
         (payload) => {
           setMessages((prev) => [...prev, payload.new])
-          setTimeout(scrollToBottom, 100) // Scrolla ner efter rendering
+          setTimeout(scrollToBottom, 100)
         }
       )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
+      setMessages([])
+      setChatInfo(null)
     }
   }, [conversationId])
 
@@ -99,17 +91,22 @@ export default function ChatPage() {
     }
   }
 
+  if (!conversationId) {
+    return (
+      <div className="flex-grow flex items-center justify-center bg-gray-50 text-gray-500">
+        Välj en chatt för att börja prata
+      </div>
+    )
+  }
+
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
-      {/* Header */}
-      <div className="p-4 bg-white shadow-md flex items-center">
-        <button onClick={() => navigate(-1)} className="mr-4 text-blue-600 font-bold">← Bakåt</button>
+    <div className="flex-grow flex flex-col bg-gray-100 min-h-0">
+      <div className="p-4 bg-white shadow-sm border-b">
         <h1 className="text-xl font-bold">
           {chatInfo?.Listings?.title ? `Chatt om: ${chatInfo.Listings.title}` : "Laddar chatt..."}
         </h1>
       </div>
 
-      {/* Meddelande-lista */}
       <div className="flex-grow overflow-y-auto p-4 space-y-4">
         {messages.map((msg) => {
           const isMe = msg.sender_id === user?.id
@@ -129,7 +126,6 @@ export default function ChatPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input-fält */}
       <form onSubmit={sendMessage} className="p-4 bg-white border-t flex gap-2">
         <input
           type="text"

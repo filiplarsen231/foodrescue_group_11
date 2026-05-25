@@ -62,7 +62,7 @@ export default function Home() {
 
     if (existingChat) {
       // Om chatten finns, gå till den
-      navigate(`/messages/${existingChat.id}`)
+      navigate(`/inbox/${existingChat.id}`)
     } else {
       // Om chatten INTE finns, skapa en ny
       const { data: newChat, error: createError } = await supabase
@@ -81,7 +81,7 @@ export default function Home() {
         console.error("Kunde inte skapa chatt:", createError.message)
         alert("Gick inte att starta chatten.")
       } else {
-        navigate(`/messages/${newChat.id}`)
+        navigate(`/inbox/${newChat.id}`)
       }
     }
   }

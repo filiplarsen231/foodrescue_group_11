@@ -132,7 +132,7 @@ export default function NotificationsBell({ user }) {
   const handleClickNotification = async (n) => {
     setOpen(false)
     if (n.conversation_id) {
-      navigate(`/messages/${n.conversation_id}`)
+      navigate(`/inbox/${n.conversation_id}`)
     }
     // Mark this one read immediately so the badge feels responsive.
     if (!n.read_at) {

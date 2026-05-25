@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react'
-import { BrowserRouter, Routes, Route, Link } from 'react-router'
+import { BrowserRouter, Routes, Route, Link, Navigate, useParams } from 'react-router'
 import { supabase } from './lib/supabase'
 import Home from './pages/Home'
 import About from './pages/About'
 import Listings from './pages/Listings'
 import Login from './pages/Login'
 import Account from './pages/Account'
-import ChatPage from './pages/ChatPage'
 import InboxPage from './pages/InboxPage'
+
+function MessagesRedirect() {
+  const { id } = useParams()
+  return <Navigate to={`/inbox/${id}`} replace />
+}
 import NotificationsBell from './components/NotificationsBell'
 
 export default function App() {
@@ -49,8 +53,9 @@ export default function App() {
         <Route path="/listings" element={<Listings />} />
         <Route path="/login" element={<Login />} />
         <Route path="/account" element={<Account />} />
-        <Route path="/messages/:id" element={<ChatPage />} />
+        <Route path="/messages/:id" element={<MessagesRedirect />} />
         <Route path="/inbox" element={<InboxPage />} />
+        <Route path="/inbox/:id" element={<InboxPage />} />
       </Routes>
     </BrowserRouter>
   )

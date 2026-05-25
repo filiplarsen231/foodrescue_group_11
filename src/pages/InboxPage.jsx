@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import ChatPanel from '../components/ChatPanel'
 
 export default function InboxPage() {
   const navigate = useNavigate()
+  const { id: selectedId } = useParams()
   const [conversations, setConversations] = useState([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState(null)
 
   useEffect(() => {
     const fetchConversations = async () => {
-      // 1. Hämta inloggad användare
       const { data: { user: authUser } } = await supabase.auth.getUser()
       if (!authUser) {
         navigate('/login')
@@ -18,8 +19,6 @@ export default function InboxPage() {
       }
       setUser(authUser)
 
-      // 2. Hämta alla chattar där användaren är inblandad
-      // Här använder vi .or() för att kolla både owner_id och seeker_id
       const { data, error } = await supabase
         .from('conversations')
         .select(`
@@ -30,10 +29,6 @@ export default function InboxPage() {
           messages ( id )
         `)
         .or(`owner_id.eq.${authUser.id},seeker_id.eq.${authUser.id}`)
-
-        // LÄGG TILL DESSA TVÅ RADER FÖR ATT FELSÖKA:
-        console.log("DEBUG INBOX - Datan vi fick:", data);
-        console.log("DEBUG INBOX - Eventuella fel:", error);
 
       if (error) {
         console.error("Fel vid hämtning av chattar:", error.message)
@@ -50,47 +45,51 @@ export default function InboxPage() {
   if (loading) return <div className="p-8 text-center text-gray-500">Laddar din inkorg...</div>
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold text-green-800 mb-6">Mina Meddelanden</h1>
-
-      {conversations.length === 0 ? (
-        <div className="text-center p-12 bg-white rounded-xl shadow-sm border">
-          <p className="text-gray-500">Du har inga aktiva chattar än.</p>
+    <div className="flex h-[calc(100vh-64px)] bg-white">
+      {/* Sidebar */}
+      <aside className="w-80 border-r flex flex-col bg-white">
+        <div className="p-4 border-b">
+          <h1 className="text-2xl font-bold text-green-800">Mina Meddelanden</h1>
         </div>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {conversations.map((chat) => {
-            // Logik för att se om det är min annons eller någon annans
-            const isOwner = chat.owner_id === user?.id
-            const roleText = isOwner ? "Din annons" : "Du är intresserad"
-            
-            return (
-              <div
-                key={chat.id}
-                onClick={() => navigate(`/messages/${chat.id}`)}
-                className="p-5 border rounded-xl shadow-sm bg-white hover:shadow-md hover:border-green-500 transition cursor-pointer flex justify-between items-center group"
-              >
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-800 group-hover:text-green-700 transition">
+
+        <div className="flex-grow overflow-y-auto">
+          {conversations.length === 0 ? (
+            <p className="p-6 text-center text-gray-500">Du har inga aktiva chattar än.</p>
+          ) : (
+            conversations.map((chat) => {
+              const isOwner = chat.owner_id === user?.id
+              const roleText = isOwner ? "Din annons" : "Du är intresserad"
+              const isSelected = selectedId === chat.id
+
+              return (
+                <button
+                  key={chat.id}
+                  onClick={() => navigate(`/inbox/${chat.id}`)}
+                  className={`w-full text-left p-4 border-b transition ${
+                    isSelected
+                      ? "bg-green-50 border-l-4 border-l-green-600"
+                      : "hover:bg-gray-50 border-l-4 border-l-transparent"
+                  }`}
+                >
+                  <h2 className="font-semibold text-gray-800 truncate">
                     {chat.Listings?.title || "Borttagen annons"}
                   </h2>
-                  <span className={`text-xs font-bold px-2 py-1 rounded mt-2 inline-block uppercase tracking-wider ${
-                    isOwner 
-                      ? "bg-blue-100 text-blue-800" 
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded mt-1 inline-block uppercase tracking-wider ${
+                    isOwner
+                      ? "bg-blue-100 text-blue-800"
                       : "bg-green-100 text-green-800"
                   }`}>
                     {roleText}
                   </span>
-                </div>
-                
-                <div className="text-green-600 font-bold opacity-0 group-hover:opacity-100 transition translate-x-2 group-hover:translate-x-0">
-                  Öppna chatt →
-                </div>
-              </div>
-            )
-          })}
+                </button>
+              )
+            })
+          )}
         </div>
-      )}
+      </aside>
+
+      {/* Chat panel */}
+      <ChatPanel conversationId={selectedId} />
     </div>
   )
 }
